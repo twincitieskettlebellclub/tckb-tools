@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pentathlon Optimizer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#000005;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:16px;min-height:100vh}
+h1{font-family:Impact,'Arial Black',sans-serif;font-size:1.5rem;text-align:center;margin-bottom:4px;letter-spacing:1px;text-transform:uppercase}
+.subtitle{text-align:center;color:#999;font-size:.75rem;margin-bottom:16px}
+.form-group{margin-bottom:12px}
+label{display:block;font-size:.78rem;color:#aaa;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+select{width:100%;padding:10px 12px;background:#1a1a1f;border:1px solid #333;color:#fff;font-size:.95rem;border-radius:4px;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+select:focus{outline:none;border-color:#666}
+select option{background:#1a1a1f;color:#fff}
+.row{display:flex;gap:10px}
+.row .form-group{flex:1}
+.section{margin-top:18px;padding:14px;background:#111;border-radius:6px;border:1px solid #333}
+.section h2{font-family:Impact,'Arial Black',sans-serif;font-size:1rem;margin-bottom:10px;letter-spacing:.5px;text-transform:uppercase}
+.bell-options{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;justify-content:center}
+.bell-btn{padding:6px 12px;background:#1a1a1f;border:1px solid #333;color:#aaa;border-radius:4px;cursor:pointer;font-size:.8rem;transition:all .15s}
+.bell-btn:hover{border-color:#666;color:#fff}
+.bell-btn.active{background:#27ae60;border-color:#27ae60;color:#fff}
+.lift-grid{margin-top:14px}
+.lift-row{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #1a1a1f}
+.lift-row:last-child{border-bottom:none}
+.lift-name{flex:0 0 110px;font-size:.85rem;color:#ccc}
+.lift-inputs{display:flex;gap:6px;flex:1;flex-wrap:wrap;align-items:center}
+.rep-input{width:60px;padding:6px 8px;background:#1a1a1f;border:1px solid #333;color:#fff;font-size:.9rem;border-radius:4px;text-align:center}
+.rep-input:focus{outline:none;border-color:#666}
+.rep-input::placeholder{color:#555}
+.bell-label{font-size:.7rem;color:#666;min-width:35px;text-align:center}
+.cap-note{font-size:.65rem;color:#c0392b;margin-left:4px}
+.results-section{margin-top:18px}
+.result-card{padding:14px;background:#111;border-radius:6px;border:1px solid #333;margin-bottom:12px}
+.total-display{text-align:center}
+.total-label{font-size:.75rem;color:#888;text-transform:uppercase;letter-spacing:1px}
+.total-value{font-family:Impact,'Arial Black',sans-serif;font-size:2.4rem;margin:4px 0}
+.total-unit{font-size:.9rem;color:#888}
+.rank-badge{display:inline-block;padding:4px 16px;border-radius:4px;font-family:Impact,'Arial Black',sans-serif;font-size:1.1rem;letter-spacing:1px;margin-top:6px}
+.rank-badge.mswc{background:#c0392b;color:#fff}
+.rank-badge.ms{background:#e67e22;color:#fff}
+.rank-badge.cms{background:#2980b9;color:#fff}
+.rank-badge.nr{background:#27ae60;color:#fff}
+.rank-badge.none{background:#333;color:#888}
+.lift-breakdown{margin-top:14px}
+.lift-result{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1a1a1f;font-size:.82rem}
+.lift-result:last-child{border-bottom:none}
+.lift-result .name{color:#ccc;flex:0 0 100px}
+.lift-result .detail{color:#888;flex:1;text-align:center}
+.lift-result .points{color:#fff;font-weight:600;flex:0 0 65px;text-align:right}
+.lift-result.optimal .points{color:#27ae60}
+.threshold-bar{margin-top:12px}
+.threshold-row{display:flex;justify-content:space-between;padding:3px 0;font-size:.78rem}
+.threshold-row.achieved{color:#27ae60;font-weight:600}
+.threshold-row .label{color:#ccc}
+.threshold-row.achieved .label{color:#27ae60}
+.threshold-row .val{color:#888}
+.threshold-row.achieved .val{color:#27ae60}
+.help-text{font-size:.7rem;color:#555;text-align:center;margin-top:4px}
+.no-data{text-align:center;color:#666;padding:16px;font-size:.85rem}
+@media(max-width:420px){
+  h1{font-size:1.2rem}
+  .lift-name{flex:0 0 80px;font-size:.78rem}
+  .rep-input{width:48px;padding:5px 4px;font-size:.82rem}
+  .bell-label{font-size:.65rem;min-width:28px}
+  .total-value{font-size:2rem}
+}
+</style>
+</head>
+<body>
+<h1>Pentathlon Optimizer</h1>
+<p class="subtitle">Optimize Bell Selection for Maximum Points</p>
+
+<div class="row">
+  <div class="form-group">
+    <label for="eventType">Event</label>
+    <select id="eventType">
+      <option value="2kb">Double Pentathlon (2KB, 3 min)</option>
+      <option value="1kb">Pentathlon (1KB, 6 min)</option>
+    </select>
+  </div>
+</div>
+
+<div class="row">
+  <div class="form-group">
+    <label for="pGender">Gender</label>
+    <select id="pGender">
+      <option value="">Select</option>
+      <option value="MALE">Male</option>
+      <option value="FEMALE">Female</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="pDivision">Division</label>
+    <select id="pDivision">
+      <option value="OPEN">Open</option>
+      <option value="V1">Veteran 1</option>
+      <option value="V2">Veteran 2</option>
+    </select>
+  </div>
+</div>
+
+<div class="form-group">
+  <label for="pWeightClass">Weight Class</label>
+  <select id="pWeightClass" disabled><option value="">Select gender first</option></select>
+</div>
+
+<div class="section">
+  <h2>Bell Weights to Test</h2>
+  <p class="help-text">Select bells you can use, then enter reps per lift per bell</p>
+  <div class="bell-options" id="bellOptions"></div>
+</div>
+
+<div class="section" id="repSection" style="display:none">
+  <h2>Rep Estimates by Lift &amp; Bell</h2>
+  <div id="capNote" style="display:none;text-align:center;margin-bottom:8px;font-size:.72rem;color:#c0392b"></div>
+  <div class="lift-grid" id="liftGrid"></div>
+</div>
+
+<div class="results-section" id="resultsSection" style="display:none"></div>
+
+<script>
+const PDATA = {"source":"IKMF - RanksTable.xlsx","scoring":{"formula":"reps * (bell_kg / 8)","coefficient_per_kg":0.125,"description":"Points per rep = bell weight in kg divided by 8"},"lifts":[{"name":"Clean","abbrev_1kb":"OAC","abbrev_2kb":"TAC"},{"name":"Clean & Press","abbrev_1kb":"OACP","abbrev_2kb":"TACP"},{"name":"Jerk","abbrev_1kb":"OAJ","abbrev_2kb":"TAJ"},{"name":"Half Snatch","abbrev_1kb":"OAHS","abbrev_2kb":"TAHS"},{"name":"Push Press","abbrev_1kb":"OAPP","abbrev_2kb":"TAPP"}],"events":{"1kb":{"name":"Pentathlon","bells":1,"duration_per_lift_min":6,"arm_config":"one_arm"},"2kb":{"name":"Double Pentathlon","bells":2,"duration_per_lift_min":3,"arm_config":"two_arm"}},"rep_caps":{"1kb":{"clean":120,"clean_and_press":60,"jerk":120,"half_snatch":108,"push_press":120},"2kb":null},"rank_thresholds":{"1kb":{"MALE":{"OPEN":{"-75":{"national_rank":1600,"cms":1700,"ms":1800,"mswc":1900},"75-85":{"national_rank":1700,"cms":1800,"ms":1900,"mswc":2000},"85+":{"national_rank":1800,"cms":1900,"ms":2000,"mswc":2100}},"V1":{"-75":{"national_rank":1500,"cms":1600,"ms":1700,"mswc":1800},"75-85":{"national_rank":1600,"cms":1700,"ms":1800,"mswc":1900},"85+":{"national_rank":1700,"cms":1800,"ms":1900,"mswc":2000}},"V2":{"-75":{"national_rank":1400,"cms":1500,"ms":1600,"mswc":1700},"75-85":{"national_rank":1500,"cms":1600,"ms":1700,"mswc":1800},"85+":{"national_rank":1600,"cms":1700,"ms":1800,"mswc":1900}}},"FEMALE":{"OPEN":{"-60":{"national_rank":1100,"cms":1200,"ms":1300,"mswc":1400},"60-70":{"national_rank":1200,"cms":1300,"ms":1400,"mswc":1500},"70+":{"national_rank":1300,"cms":1400,"ms":1500,"mswc":1600}},"V1":{"-60":{"national_rank":1000,"cms":1100,"ms":1200,"mswc":1300},"60-70":{"national_rank":1100,"cms":1200,"ms":1300,"mswc":1400},"70+":{"national_rank":1200,"cms":1300,"ms":1400,"mswc":1500}},"V2":{"-60":{"national_rank":900,"cms":1000,"ms":1100,"mswc":1200},"60-70":{"national_rank":1000,"cms":1100,"ms":1200,"mswc":1300},"70+":{"national_rank":1100,"cms":1200,"ms":1300,"mswc":1400}}}},"2kb":{"MALE":{"OPEN":{"-70":{"national_rank":385,"cms":410,"ms":435,"mswc":460},"70-77":{"national_rank":410,"cms":435,"ms":460,"mswc":485},"77-84":{"national_rank":435,"cms":460,"ms":485,"mswc":510},"84-91":{"national_rank":460,"cms":485,"ms":510,"mswc":535},"91+":{"national_rank":485,"cms":510,"ms":535,"mswc":560}},"V1":{"-70":{"national_rank":335,"cms":360,"ms":385,"mswc":410},"70-77":{"national_rank":360,"cms":385,"ms":410,"mswc":435},"77-84":{"national_rank":385,"cms":410,"ms":435,"mswc":460},"84-91":{"national_rank":410,"cms":435,"ms":460,"mswc":485},"91+":{"national_rank":435,"cms":460,"ms":485,"mswc":510}},"V2":{"-70":{"national_rank":305,"cms":335,"ms":360,"mswc":385},"70-77":{"national_rank":335,"cms":360,"ms":385,"mswc":410},"77-84":{"national_rank":360,"cms":385,"ms":410,"mswc":435},"84-91":{"national_rank":385,"cms":410,"ms":435,"mswc":460},"91+":{"national_rank":410,"cms":435,"ms":460,"mswc":485}}},"FEMALE":{"OPEN":{"-53":{"national_rank":285,"cms":310,"ms":335,"mswc":360},"53-60":{"national_rank":310,"cms":335,"ms":360,"mswc":385},"60-67":{"national_rank":335,"cms":360,"ms":385,"mswc":410},"67-74":{"national_rank":360,"cms":385,"ms":410,"mswc":435},"74+":{"national_rank":385,"cms":410,"ms":435,"mswc":460}},"V1":{"-53":{"national_rank":235,"cms":260,"ms":285,"mswc":310},"53-60":{"national_rank":260,"cms":285,"ms":310,"mswc":335},"60-67":{"national_rank":285,"cms":310,"ms":335,"mswc":360},"67-74":{"national_rank":310,"cms":335,"ms":360,"mswc":385},"74+":{"national_rank":335,"cms":360,"ms":385,"mswc":410}},"V2":{"-53":{"national_rank":215,"cms":235,"ms":260,"mswc":285},"53-60":{"national_rank":235,"cms":260,"ms":285,"mswc":310},"60-67":{"national_rank":260,"cms":285,"ms":310,"mswc":335},"67-74":{"national_rank":285,"cms":310,"ms":335,"mswc":360},"74+":{"national_rank":310,"cms":335,"ms":360,"mswc":385}}}}}};
+
+const LIFTS = ['clean', 'clean_and_press', 'jerk', 'half_snatch', 'push_press'];
+const LIFT_DISPLAY = {
+  clean: 'Clean',
+  clean_and_press: 'Clean & Press',
+  jerk: 'Jerk',
+  half_snatch: 'Half Snatch',
+  push_press: 'Push Press'
+};
+const BELL_SIZES = [8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40];
+const WC_2KB_MALE = ['-70', '70-77', '77-84', '84-91', '91+'];
+const WC_2KB_FEMALE = ['-53', '53-60', '60-67', '67-74', '74+'];
+const WC_1KB_MALE = ['-75', '75-85', '85+'];
+const WC_1KB_FEMALE = ['-60', '60-70', '70+'];
+
+let selectedBells = new Set();
+
+function getWeightClasses() {
+  const ev = document.getElementById('eventType').value;
+  const g = document.getElementById('pGender').value;
+  if (!g) return [];
+  if (ev === '2kb') return g === 'MALE' ? WC_2KB_MALE : WC_2KB_FEMALE;
+  return g === 'MALE' ? WC_1KB_MALE : WC_1KB_FEMALE;
+}
+
+function updateWeightClasses() {
+  const sel = document.getElementById('pWeightClass');
+  const wcs = getWeightClasses();
+  sel.innerHTML = wcs.length ? '' : '<option value="">Select gender first</option>';
+  sel.disabled = wcs.length === 0;
+  for (const wc of wcs) {
+    const opt = document.createElement('option');
+    opt.value = wc; opt.textContent = wc + ' kg';
+    sel.appendChild(opt);
+  }
+}
+
+function renderBellOptions() {
+  const container = document.getElementById('bellOptions');
+  container.innerHTML = '';
+  for (const b of BELL_SIZES) {
+    const btn = document.createElement('button');
+    btn.className = 'bell-btn' + (selectedBells.has(b) ? ' active' : '');
+    btn.textContent = b + 'kg';
+    btn.addEventListener('click', () => {
+      if (selectedBells.has(b)) selectedBells.delete(b); else selectedBells.add(b);
+      btn.classList.toggle('active');
+      renderRepGrid();
+    });
+    container.appendChild(btn);
+  }
+}
+
+function renderRepGrid() {
+  const grid = document.getElementById('liftGrid');
+  const section = document.getElementById('repSection');
+  const capNote = document.getElementById('capNote');
+  const ev = document.getElementById('eventType').value;
+  const bells = [...selectedBells].sort((a, b) => a - b);
+
+  if (bells.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  const caps = PDATA.rep_caps[ev];
+  if (caps) {
+    capNote.style.display = 'block';
+    capNote.textContent = 'Rep caps apply: ' + LIFTS.filter(l => caps[l]).map(l => LIFT_DISPLAY[l] + ' ' + caps[l]).join(', ');
+  } else {
+    capNote.style.display = 'none';
+  }
+
+  let html = '';
+  for (const lift of LIFTS) {
+    html += '<div class="lift-row"><div class="lift-name">' + LIFT_DISPLAY[lift] + '</div><div class="lift-inputs">';
+    for (const b of bells) {
+      const cap = caps ? caps[lift] : null;
+      html += '<div style="text-align:center"><div class="bell-label">' + b + 'kg</div>';
+      html += '<input type="number" class="rep-input" data-lift="' + lift + '" data-bell="' + b + '" min="0" max="999" placeholder="0"';
+      html += ' oninput="calculate()">';
+      if (cap) html += '<div class="cap-note">max ' + cap + '</div>';
+      html += '</div>';
+    }
+    html += '</div></div>';
+  }
+  grid.innerHTML = html;
+  calculate();
+}
+
+function getThresholds(eventType, gender, weightClass, division) {
+  const t = PDATA.rank_thresholds;
+  if (!t || !t[eventType]) return {};
+  const gt = t[eventType][gender];
+  if (!gt) return {};
+  const dt = gt[division];
+  if (!dt) return {};
+
+  if (dt[weightClass]) return dt[weightClass];
+
+  // Fuzzy match
+  try {
+    const wcNum = parseFloat(weightClass.replace(/[-+]/g, '').split('-')[0] || weightClass);
+    for (const key of Object.keys(dt)) {
+      if (key.startsWith('-')) {
+        if (wcNum <= parseFloat(key.slice(1))) return dt[key];
+      } else if (key.endsWith('+')) {
+        if (wcNum >= parseFloat(key.slice(0, -1))) return dt[key];
+      } else if (key.includes('-')) {
+        const [lo, hi] = key.split('-').map(Number);
+        if (wcNum >= lo && wcNum <= hi) return dt[key];
+      }
+    }
+  } catch(e) {}
+  return {};
+}
+
+function lookupRank(thresholds, totalPoints) {
+  if (!thresholds || Object.keys(thresholds).length === 0) return null;
+  const order = ['mswc', 'ms', 'cms', 'national_rank'];
+  for (const r of order) {
+    if (thresholds[r] != null && totalPoints >= thresholds[r]) {
+      return r;
+    }
+  }
+  return 'below';
+}
+
+function calculate() {
+  const ev = document.getElementById('eventType').value;
+  const gender = document.getElementById('pGender').value;
+  const division = document.getElementById('pDivision').value;
+  const wc = document.getElementById('pWeightClass').value;
+  const resultsDiv = document.getElementById('resultsSection');
+
+  const inputs = document.querySelectorAll('.rep-input');
+  if (inputs.length === 0) { resultsDiv.style.display = 'none'; return; }
+
+  // Gather reps by lift and bell
+  const athleteReps = {};
+  let anyReps = false;
+  for (const inp of inputs) {
+    const lift = inp.dataset.lift;
+    const bell = parseInt(inp.dataset.bell);
+    const reps = parseInt(inp.value) || 0;
+    if (reps > 0) anyReps = true;
+    if (!athleteReps[lift]) athleteReps[lift] = {};
+    athleteReps[lift][bell] = reps;
+  }
+
+  if (!anyReps) { resultsDiv.style.display = 'none'; return; }
+
+  const caps = PDATA.rep_caps[ev];
+  const liftResults = [];
+  let totalPoints = 0;
+
+  for (const lift of LIFTS) {
+    if (!athleteReps[lift]) continue;
+    const repsByWeight = athleteReps[lift];
+    const cap = caps ? caps[lift] : null;
+
+    let bestWeight = null, bestPts = -1, bestReps = 0, bestCapped = 0;
+    const allWeights = {};
+
+    for (const [w, r] of Object.entries(repsByWeight)) {
+      const weight = parseInt(w);
+      const capped = cap ? Math.min(r, cap) : r;
+      const coeff = weight / 8;
+      const pts = capped * coeff;
+      allWeights[weight] = { reps: r, capped, coeff, pts };
+      if (pts > bestPts) { bestPts = pts; bestWeight = weight; bestReps = r; bestCapped = capped; }
+    }
+
+    if (bestWeight == null || bestPts <= 0) continue;
+
+    const sorted = Object.keys(allWeights).map(Number).sort((a, b) => a - b);
+    const idx = sorted.indexOf(bestWeight);
+    let altUp = null, altDown = null;
+    if (idx < sorted.length - 1) altUp = { weight: sorted[idx + 1], pts: allWeights[sorted[idx + 1]].pts };
+    if (idx > 0) altDown = { weight: sorted[idx - 1], pts: allWeights[sorted[idx - 1]].pts };
+
+    liftResults.push({
+      lift, bellKg: bestWeight, reps: bestReps, capped: bestCapped,
+      coeff: bestWeight / 8, points: bestPts, altUp, altDown
+    });
+    totalPoints += bestPts;
+  }
+
+  if (liftResults.length === 0) { resultsDiv.style.display = 'none'; return; }
+
+  // Rank lookup
+  let rank = null, thresholds = {};
+  if (gender && wc) {
+    thresholds = getThresholds(ev, gender, wc, division);
+    rank = lookupRank(thresholds, totalPoints);
+  }
+
+  // Render
+  const rankDisplay = { mswc: 'MSWC', ms: 'MS', cms: 'CMS', national_rank: 'NR', below: 'Below NR' };
+  const rankClass = { mswc: 'mswc', ms: 'ms', cms: 'cms', national_rank: 'nr', below: 'none' };
+
+  let html = '<div class="result-card"><div class="total-display">';
+  html += '<div class="total-label">Total Points</div>';
+  html += '<div class="total-value">' + totalPoints.toFixed(1) + ' <span class="total-unit">pts</span></div>';
+  if (rank) {
+    html += '<div class="rank-badge ' + (rankClass[rank] || 'none') + '">' + (rankDisplay[rank] || rank.toUpperCase()) + '</div>';
+  }
+  html += '</div>';
+
+  // Lift breakdown
+  html += '<div class="lift-breakdown">';
+  for (const lr of liftResults) {
+    html += '<div class="lift-result optimal">';
+    html += '<span class="name">' + LIFT_DISPLAY[lr.lift] + '</span>';
+    html += '<span class="detail">' + lr.bellKg + 'kg x ' + lr.capped + (lr.capped !== lr.reps ? ' (of ' + lr.reps + ')' : '') + ' @ ' + lr.coeff.toFixed(3) + '</span>';
+    html += '<span class="points">' + lr.points.toFixed(1) + '</span>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // Thresholds
+  if (Object.keys(thresholds).length > 0) {
+    html += '<div class="threshold-bar" style="margin-top:12px;border-top:1px solid #333;padding-top:8px">';
+    html += '<div style="font-size:.72rem;color:#888;text-transform:uppercase;margin-bottom:4px">Rank Thresholds</div>';
+    const order = ['mswc', 'ms', 'cms', 'national_rank'];
+    const display = { mswc: 'MSWC', ms: 'MS', cms: 'CMS', national_rank: 'National Rank' };
+    for (const r of order) {
+      if (thresholds[r] == null) continue;
+      const achieved = totalPoints >= thresholds[r];
+      const delta = totalPoints - thresholds[r];
+      const sign = delta >= 0 ? '+' : '';
+      html += '<div class="threshold-row' + (achieved ? ' achieved' : '') + '">';
+      html += '<span class="label">' + (achieved ? '\u2713 ' : '') + display[r] + '</span>';
+      html += '<span class="val">' + thresholds[r] + ' pts (' + sign + delta.toFixed(1) + ')</span>';
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
+  html += '</div>';
+  resultsDiv.innerHTML = html;
+  resultsDiv.style.display = 'block';
+}
+
+// Event listeners
+document.getElementById('eventType').addEventListener('change', () => { updateWeightClasses(); renderRepGrid(); });
+document.getElementById('pGender').addEventListener('change', () => { updateWeightClasses(); calculate(); });
+document.getElementById('pDivision').addEventListener('change', calculate);
+document.getElementById('pWeightClass').addEventListener('change', calculate);
+
+// Init
+renderBellOptions();
+updateWeightClasses();
+</script>
+</body>
+</html>
