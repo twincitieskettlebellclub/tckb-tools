@@ -1,0 +1,8 @@
+# Credentials & secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Claude Code local settings
+.claude/
